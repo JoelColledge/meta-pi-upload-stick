@@ -91,6 +91,7 @@ IMAGE_INSTALL += " \
     wpa-supplicant-private-conf \
     parted \
     lvm2 \
+    dosfstools \
     systemd-analyze \
 "
 
