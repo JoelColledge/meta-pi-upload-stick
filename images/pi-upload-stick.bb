@@ -91,8 +91,12 @@ IMAGE_INSTALL += " \
     wpa-supplicant-private-conf \
     parted \
     lvm2 \
+    util-linux-lsblk \
     dosfstools \
+    vorbis-tools \
+    rsync \
     systemd-analyze \
+    upload-stick \
 "
 
 set_local_timezone() {
