@@ -96,6 +96,7 @@ IMAGE_INSTALL += " \
     vorbis-tools \
     rsync \
     systemd-analyze \
+    mass-storage-tune \
     upload-stick \
 "
 
