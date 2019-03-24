@@ -13,13 +13,14 @@ LICENSE = "MIT"
 S = "${WORKDIR}/upload-stick"
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE_${PN} = "upload-stick-start.service"
+SYSTEMD_SERVICE_${PN} = "upload-stick-run.service"
 SYSTEMD_AUTO_ENABLE = "enable"
 
 do_install_append() {
              install -d ${D}${systemd_system_unitdir}
              install -m 0644 ${S}/upload-stick-prepare.service ${D}${systemd_system_unitdir}
              install -m 0644 ${S}/upload-stick-start.service ${D}${systemd_system_unitdir}
+             install -m 0644 ${S}/upload-stick-run.service ${D}${systemd_system_unitdir}
 }
 
 BBCLASSEXTEND = "native"
