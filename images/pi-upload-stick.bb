@@ -91,10 +91,11 @@ IMAGE_INSTALL += " \
     wpa-supplicant-private-conf \
     parted \
     lvm2 \
-    util-linux-lsblk \
+    e2fsprogs-resize2fs \
     dosfstools \
     vorbis-tools \
     rsync \
+    util-linux-lsblk \
     systemd-analyze \
     mass-storage-tune \
     upload-stick \
