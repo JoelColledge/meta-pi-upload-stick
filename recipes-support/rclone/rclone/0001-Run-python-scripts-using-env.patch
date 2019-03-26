@@ -1,0 +1,23 @@
+From 60cb3457725cf2ade49a41da17af037e9a97dede Mon Sep 17 00:00:00 2001
+From: Joel Colledge <joel.colledge@gmail.com>
+Date: Tue, 26 Mar 2019 22:11:21 +0100
+Subject: [PATCH] Run python scripts using env
+
+Otherwise the build tools hardcode the python path into them.
+---
+ bin/make_changelog.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/github.com/ncw/rclone/bin/make_changelog.py b/src/github.com/ncw/rclone/bin/make_changelog.py
+index 03e79a6b0..3a1712d5a 100755
+--- a/src/github.com/ncw/rclone/bin/make_changelog.py
++++ b/src/github.com/ncw/rclone/bin/make_changelog.py
+@@ -1,4 +1,4 @@
+-#!/usr/bin/python
++#!/usr/bin/env python
+ """
+ Generate a markdown changelog for the rclone project
+ """
+-- 
+2.17.1
+

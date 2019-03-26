@@ -94,6 +94,7 @@ IMAGE_INSTALL += " \
     e2fsprogs-resize2fs \
     dosfstools \
     vorbis-tools \
+    rclone \
     rsync \
     util-linux-lsblk \
     systemd-analyze \
