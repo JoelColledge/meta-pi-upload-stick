@@ -1,0 +1,110 @@
+From 3fc1ef7f30fec0e4760242c6d6af67aa38856501 Mon Sep 17 00:00:00 2001
+From: Minas Harutyunyan <Minas.Harutyunyan@synopsys.com>
+Date: Wed, 19 Sep 2018 18:13:52 +0400
+Subject: [PATCH 1/2] usb: dwc2: Disable all EP's on disconnect
+
+Disabling all EP's allow to reset EP's to initial state.
+On disconnect disable all EP's instead of just killing
+all requests. Because of some platform didn't catch
+disconnect event, same stuff added to
+dwc2_hsotg_core_init_disconnected() function when USB
+reset detected on the bus.
+
+Changed from version 1:
+Changed lock acquire flow in dwc2_hsotg_ep_disable()
+function.
+
+Signed-off-by: Minas Harutyunyan <hminas@synopsys.com>
+Signed-off-by: Felipe Balbi <felipe.balbi@linux.intel.com>
+---
+ drivers/usb/dwc2/gadget.c | 30 +++++++++++++++++++++++-------
+ 1 file changed, 23 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/usb/dwc2/gadget.c b/drivers/usb/dwc2/gadget.c
+index e164439b2154..45524a25821a 100644
+--- a/drivers/usb/dwc2/gadget.c
++++ b/drivers/usb/dwc2/gadget.c
+@@ -3179,6 +3179,8 @@ static void kill_all_requests(struct dwc2_hsotg *hsotg,
+ 		dwc2_hsotg_txfifo_flush(hsotg, ep->fifo_index);
+ }
+ 
++static int dwc2_hsotg_ep_disable(struct usb_ep *ep);
++
+ /**
+  * dwc2_hsotg_disconnect - disconnect service
+  * @hsotg: The device state.
+@@ -3197,13 +3199,12 @@ void dwc2_hsotg_disconnect(struct dwc2_hsotg *hsotg)
+ 	hsotg->connected = 0;
+ 	hsotg->test_mode = 0;
+ 
++	/* all endpoints should be shutdown */
+ 	for (ep = 0; ep < hsotg->num_of_eps; ep++) {
+ 		if (hsotg->eps_in[ep])
+-			kill_all_requests(hsotg, hsotg->eps_in[ep],
+-					  -ESHUTDOWN);
++			dwc2_hsotg_ep_disable(&hsotg->eps_in[ep]->ep);
+ 		if (hsotg->eps_out[ep])
+-			kill_all_requests(hsotg, hsotg->eps_out[ep],
+-					  -ESHUTDOWN);
++			dwc2_hsotg_ep_disable(&hsotg->eps_out[ep]->ep);
+ 	}
+ 
+ 	call_gadget(hsotg, disconnect);
+@@ -3258,13 +3259,23 @@ void dwc2_hsotg_core_init_disconnected(struct dwc2_hsotg *hsotg,
+ 	u32 val;
+ 	u32 usbcfg;
+ 	u32 dcfg = 0;
++	int ep;
+ 
+ 	/* Kill any ep0 requests as controller will be reinitialized */
+ 	kill_all_requests(hsotg, hsotg->eps_out[0], -ECONNRESET);
+ 
+-	if (!is_usb_reset)
++	if (!is_usb_reset) {
+ 		if (dwc2_core_reset(hsotg, true))
+ 			return;
++	} else {
++		/* all endpoints should be shutdown */
++		for (ep = 1; ep < hsotg->num_of_eps; ep++) {
++			if (hsotg->eps_in[ep])
++				dwc2_hsotg_ep_disable(&hsotg->eps_in[ep]->ep);
++			if (hsotg->eps_out[ep])
++				dwc2_hsotg_ep_disable(&hsotg->eps_out[ep]->ep);
++		}
++	}
+ 
+ 	/*
+ 	 * we must now enable ep0 ready for host detection and then
+@@ -4002,6 +4013,7 @@ static int dwc2_hsotg_ep_disable(struct usb_ep *ep)
+ 	unsigned long flags;
+ 	u32 epctrl_reg;
+ 	u32 ctrl;
++	int locked;
+ 
+ 	dev_dbg(hsotg->dev, "%s(ep %p)\n", __func__, ep);
+ 
+@@ -4012,7 +4024,9 @@ static int dwc2_hsotg_ep_disable(struct usb_ep *ep)
+ 
+ 	epctrl_reg = dir_in ? DIEPCTL(index) : DOEPCTL(index);
+ 
+-	spin_lock_irqsave(&hsotg->lock, flags);
++	locked = spin_is_locked(&hsotg->lock);
++	if (!locked)
++		spin_lock_irqsave(&hsotg->lock, flags);
+ 
+ 	ctrl = dwc2_readl(hsotg->regs + epctrl_reg);
+ 
+@@ -4036,7 +4050,9 @@ static int dwc2_hsotg_ep_disable(struct usb_ep *ep)
+ 	hs_ep->fifo_index = 0;
+ 	hs_ep->fifo_size = 0;
+ 
+-	spin_unlock_irqrestore(&hsotg->lock, flags);
++	if (!locked)
++		spin_unlock_irqrestore(&hsotg->lock, flags);
++
+ 	return 0;
+ }
+ 
+-- 
+2.17.1
+
