@@ -11,9 +11,10 @@ SUMMARY = "Hello World by Cargo for Rust"
 LICENSE = "MIT"
 
 S = "${WORKDIR}/upload-stick"
+FILES_${PN} += "${systemd_system_unitdir}/upload-stick-start.service ${systemd_system_unitdir}/upload-stick-run.service"
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE_${PN} = "upload-stick-run.service"
+SYSTEMD_SERVICE_${PN} = "upload-stick-prepare.service"
 SYSTEMD_AUTO_ENABLE = "enable"
 
 do_install_append() {
